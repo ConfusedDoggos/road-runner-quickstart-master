@@ -143,7 +143,7 @@ public class AutoTest2 extends LinearOpMode {
             @Override
             public boolean run(@NonNull TelemetryPacket telemetryPacket) {
                 if (!initialized) {
-                    verticalSlideMotor.setPower(0.4);
+                    verticalSlideMotor.setPower(0.6);
                     initialized = true;
                 }
 
@@ -156,8 +156,17 @@ public class AutoTest2 extends LinearOpMode {
                     return true;
                 } else {
                     // false stops action rerun
-                    verticalSlideMotor.setPower(0);
-                    return false;
+                    new Timer().shedule(
+                        new java.util.TimerTask() {
+                            @Override
+                            public void run() {
+                                verticalSlideMotor.setPower(0);
+                                return false;
+                            }
+                        },300
+                    );
+                    
+                    
                 }
                 // overall, the action powers the lift until it surpasses
                 // 3000 encoder ticks, then powers it off
@@ -226,8 +235,15 @@ public class AutoTest2 extends LinearOpMode {
                     return true;
                 } else {
                     // false stops action rerun
-                    horizontalSlideMotor.setPower(0);
-                    return false;
+                    new Timer().shedule(
+                        new java.util.TimerTask() {
+                            @Override
+                            public void run() {
+                                horizontalSlideMotor.setPower(0);
+                                return false;
+                            }
+                        },300
+                    );
                 }
                 // overall, the action powers the lift until it surpasses
                 // 3000 encoder ticks, then powers it off
