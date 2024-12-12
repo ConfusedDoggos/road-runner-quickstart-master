@@ -27,22 +27,20 @@ public class AutoTest2 extends LinearOpMode {
     //@Config
     // i = intake, iC = intake claw, iW = intake wrist, iA = intake arm
     // d = delivery, dC = delivery claw, dCR = delivery claw right, dCL = delivery claw left, dW = delivery wrist
-    public static double iCOpen = 0.8;
+    public static double iCOpen = 0.7;
     public static double iCClose = 0.55;
     public static double iCAlign = 0.57;
     public static double iWTransferPos = 0.84;
-    public static double iWAlteredPos;
+    public static double iWAlteredPos = 0;
     public static double iWAlignmentPos = 0;
     public static double iAUp = 0;
     public static double iADown = 0.64;
     public static double iAReady = 0.5;
-    public static double dCROpen = 0.65;
-    public static double dCRClose = 0.35;
-    public static double dCLOpen = 0.27;
-    public static double dCLClose = 0.55;
+    public static double dCOpen = 0.5;
+    public static double dCClose = 0.35;
     public static double dWTransfer = 1;
-    public static double dWDeliverBucket = 0.4;
-    public static double dWDeliverSpecimen = 0.3;
+    public static double dWDeliverBucket = 0.2;
+    public static double dWDeliverSpecimen = 0;
     public static double dWStartPos = 0.8;
     public static int verticalSlidePos;
     public static int horizontalSlidePos;
@@ -92,8 +90,7 @@ public class AutoTest2 extends LinearOpMode {
     private Servo intakeWrist;
     private Servo intakeArm;
     private Servo deliveryWrist;
-    private Servo deliveryClawR;
-    private Servo deliveryClawL;
+    private Servo deliveryClaw;
     //public boolean GoNextAction = true;
     //public boolean actionRunning = false;
 
@@ -156,17 +153,15 @@ public class AutoTest2 extends LinearOpMode {
                     return true;
                 } else {
                     // false stops action rerun
-                    new Timer().shedule(
+                    new Timer().schedule(
                         new java.util.TimerTask() {
                             @Override
                             public void run() {
                                 verticalSlideMotor.setPower(0);
-                                return false;
                             }
                         },300
                     );
-                    
-                    
+                    return false;
                 }
                 // overall, the action powers the lift until it surpasses
                 // 3000 encoder ticks, then powers it off
@@ -235,15 +230,15 @@ public class AutoTest2 extends LinearOpMode {
                     return true;
                 } else {
                     // false stops action rerun
-                    new Timer().shedule(
+                    new Timer().schedule(
                         new java.util.TimerTask() {
                             @Override
                             public void run() {
                                 horizontalSlideMotor.setPower(0);
-                                return false;
                             }
                         },300
                     );
+                    return false;
                 }
                 // overall, the action powers the lift until it surpasses
                 // 3000 encoder ticks, then powers it off
@@ -256,20 +251,17 @@ public class AutoTest2 extends LinearOpMode {
     }
 
     public class DeliverySystem {
-        private Servo dCL;
-        private Servo dCR;
+        private Servo dC;
         private Servo dW;
 
         public DeliverySystem(HardwareMap hardwareMap) {
-            dCL = hardwareMap.get(Servo.class, "deliveryClawL");
-            dCR = hardwareMap.get(Servo.class, "deliveryClawR");
+            dC = hardwareMap.get(Servo.class, "deliveryClawR");
             dW = hardwareMap.get(Servo.class, "deliveryWrist");
         }
         public class CloseDeliveryClaw implements Action {
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
-                dCL.setPosition(dCLClose);
-                dCR.setPosition(dCRClose);
+                dC.setPosition(dCClose);
                 return false;
             }
         }
@@ -279,8 +271,7 @@ public class AutoTest2 extends LinearOpMode {
         public class OpenDeliveryClaw implements Action {
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
-                dCL.setPosition(dCLOpen);
-                dCR.setPosition(dCROpen);
+                dC.setPosition(dCOpen);
                 return false;
             }
         }
@@ -326,8 +317,7 @@ public class AutoTest2 extends LinearOpMode {
                         new java.util.TimerTask() {
                             @Override
                             public void run() {
-                                dCL.setPosition(dCLOpen);
-                                dCR.setPosition(dCROpen);
+                                dC.setPosition(dCOpen);
                                 new Timer().schedule(
                                         new java.util.TimerTask() {
                                             @Override
@@ -337,8 +327,7 @@ public class AutoTest2 extends LinearOpMode {
                                                         new java.util.TimerTask() {
                                                             @Override
                                                             public void run() {
-                                                                dCL.setPosition(dCLClose);
-                                                                dCR.setPosition(dCRClose);
+                                                                dC.setPosition(dCClose);
                                                                 /*new Timer().schedule(
                                                                         new java.util.TimerTask() {
                                                                             @Override
@@ -367,15 +356,13 @@ public class AutoTest2 extends LinearOpMode {
         private Servo iC;
         private Servo iW;
         private Servo iA;
-        private Servo dCL;
-        private Servo dCR;
+        private Servo dC;
         private Servo dW;
         public IntakeSystem(HardwareMap hardwareMap) {
             iC = hardwareMap.get(Servo.class, "intakeClaw");
             iW = hardwareMap.get(Servo.class, "intakeWrist");
             iA = hardwareMap.get(Servo.class, "intakeArm");
-            dCL = hardwareMap.get(Servo.class, "deliveryClawL");
-            dCR = hardwareMap.get(Servo.class, "deliveryClawR");
+            dC = hardwareMap.get(Servo.class, "deliveryClawR");
             dW = hardwareMap.get(Servo.class, "deliveryWrist");
 
         }
@@ -485,16 +472,14 @@ public class AutoTest2 extends LinearOpMode {
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
                 dW.setPosition(dWTransfer);
-                dCL.setPosition(dCLOpen);
-                dCR.setPosition(dCROpen);
+                dC.setPosition(dCOpen);
                 iW.setPosition(iWTransferPos);
                 iA.setPosition(iAUp);
                 new Timer().schedule(
                         new java.util.TimerTask() {
                             @Override
                             public void run() {
-                                dCR.setPosition(dCRClose);
-                                dCL.setPosition(dCLClose);
+                                dC.setPosition(dCClose);
                                 new Timer().schedule(
                                         new java.util.TimerTask() {
                                             @Override
@@ -681,8 +666,7 @@ public class AutoTest2 extends LinearOpMode {
         intakeWrist.setPosition(iWTransferPos);
         intakeArm.setPosition(iAUp);
         deliveryWrist.setPosition(dWStartPos);
-        deliveryClawL.setPosition(dCLClose);
-        deliveryClawR.setPosition(dCRClose);
+        deliveryClaw.setPosition(dCClose);
     }
     private void initMotors() {
         rightBack = hardwareMap.get(DcMotor.class, "rightBack");
@@ -695,8 +679,7 @@ public class AutoTest2 extends LinearOpMode {
         intakeWrist = hardwareMap.get(Servo.class, "intakeWrist");
         intakeArm = hardwareMap.get(Servo.class, "intakeArm");
         deliveryWrist = hardwareMap.get(Servo.class, "deliveryWrist");
-        deliveryClawR = hardwareMap.get(Servo.class, "deliveryClawR");
-        deliveryClawL = hardwareMap.get(Servo.class, "deliveryClawL");
+        deliveryClaw = hardwareMap.get(Servo.class, "deliveryClawR");
         //Reset any nonzero encoder values
         rightBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         leftBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);

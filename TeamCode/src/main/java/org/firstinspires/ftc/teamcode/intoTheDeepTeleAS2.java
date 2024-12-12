@@ -1,5 +1,10 @@
 package org.firstinspires.ftc.teamcode;
 
+import androidx.annotation.NonNull;
+
+import com.acmerobotics.dashboard.config.Config;
+import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
+import com.acmerobotics.roadrunner.Action;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -8,9 +13,26 @@ import com.qualcomm.robotcore.hardware.Servo;
 
 import java.util.Timer;
 import java.util.TimerTask;
-
-@TeleOp(name = "intoTheDeepTeleAS2")
+@Config
+@TeleOp(name = "intoTheDeepTeleAS2", group = "TeleOp")
 public class intoTheDeepTeleAS2 extends LinearOpMode {
+    public static double iCOpen = 0.7;
+    public static double iCClose = 0.55;
+    public static double iCAlign = 0.57;
+    public static double iWTransferPos = 0.84;
+    public static double iWAlteredPos = 0;
+    public static double iWAlignmentPos = 0;
+    public static double iAUp = 0;
+    public static double iADown = 0.64;
+    public static double iAReady = 0.5;
+    public static double dCOpen = 0.5;
+    public static double dCClose = 0.35;
+    public static double dWTransfer = 1;
+    public static double dWDeliverBucket = 0.2;
+    public static double dWDeliverSpecimen = 0;
+    public static double dWStartPos = 0.8;
+    public static int TransferDelay1 = 250;
+    public static int TransferDelay2 = 500;
     private DcMotor rightBack;
     private DcMotor leftBack;
     private DcMotor leftFront;
@@ -21,8 +43,7 @@ public class intoTheDeepTeleAS2 extends LinearOpMode {
     private Servo intakeWrist;
     private Servo intakeArm;
     private Servo deliveryWrist;
-    private Servo deliveryClawR;
-    private Servo deliveryClawL;
+    private Servo deliveryClaw;
 
 
     float horizontal;
@@ -35,6 +56,7 @@ public class intoTheDeepTeleAS2 extends LinearOpMode {
     boolean freeWristRotate;
     boolean isOpen;
     double downCounter;
+
 
     public intoTheDeepTeleAS2() {
     }
@@ -55,8 +77,7 @@ public class intoTheDeepTeleAS2 extends LinearOpMode {
         intakeWrist = hardwareMap.get(Servo.class, "intakeWrist");
         intakeArm = hardwareMap.get(Servo.class, "intakeArm");
         deliveryWrist = hardwareMap.get(Servo.class, "deliveryWrist");
-        deliveryClawR = hardwareMap.get(Servo.class, "deliveryClawR");
-        deliveryClawL = hardwareMap.get(Servo.class, "deliveryClawL");
+        deliveryClaw = hardwareMap.get(Servo.class, "deliveryClawR");
 
 
         initMotorModes();
@@ -70,7 +91,7 @@ public class intoTheDeepTeleAS2 extends LinearOpMode {
                 speedSettings();
                 mecanumMath();
                 if (gamepad1.a) {
-                    intakeClaw.setPosition(0.8);
+                    intakeClaw.setPosition(iCOpen);
                     /*if (!freeWristRotate) {
                         deliveryClawR.setPosition(0.5);
                         deliveryClawL.setPosition(0.3);
@@ -79,45 +100,44 @@ public class intoTheDeepTeleAS2 extends LinearOpMode {
                     //intake claw open
                 } else if (gamepad1.b) {
                     //intake claw close
-                    intakeClaw.setPosition(0.55);
+                    intakeClaw.setPosition(iCClose);
                     isOpen = false;
                 }
                 if (gamepad1.left_stick_button) {
-                    Timer transferTimer = new Timer();
-                    class transfer extends TimerTask {
-                        int taskNumber = 0;
-
-                        public void run() {
-                            if (taskNumber == 1) {
-                                deliveryClawR.setPosition(0.35);
-                                deliveryClawL.setPosition(0.27);
-                            } else if (taskNumber == 2) {
-                                intakeClaw.setPosition(0.8);
-                            }
-                            taskNumber += 1;
-                            if (taskNumber > 2) {
-                                transferTimer.cancel();
-                            }
+                            deliveryWrist.setPosition(dWTransfer);
+                            deliveryClaw.setPosition(dCOpen);
+                            deliveryClaw.setPosition(dCOpen);
+                            intakeWrist.setPosition(iWTransferPos);
+                            intakeArm.setPosition(iAUp);
+                            new Timer().schedule(
+                                    new java.util.TimerTask() {
+                                        @Override
+                                        public void run() {
+                                            deliveryClaw.setPosition(dCClose);
+                                            new Timer().schedule(
+                                                    new java.util.TimerTask() {
+                                                        @Override
+                                                        public void run() {
+                                                            intakeClaw.setPosition(iCOpen);
+                                                        }
+                                                    },TransferDelay1
+                                            );
+                                        }
+                                    },TransferDelay2
+                            );
                         }
-                    }
-
-                    TimerTask intakeTask = new transfer();
-                    transferTimer.schedule(intakeTask, 0, 200);
-                }
                 if (gamepad1.x) {
-                    deliveryClawR.setPosition(0.65);
-                    deliveryClawL.setPosition(0.27);
+                    deliveryClaw.setPosition(dCClose);
                 } else if (gamepad1.y) {
-                    deliveryClawR.setPosition(0.35);
-                    deliveryClawL.setPosition(0.55);
+                    deliveryClaw.setPosition(dCOpen);
                 }
                 if (gamepad1.dpad_left) {
-                    deliveryWrist.setPosition(0.55);
+                    deliveryWrist.setPosition(dWDeliverBucket);
                 } else if (gamepad1.dpad_right) {
-                    deliveryWrist.setPosition(1);
+                    deliveryWrist.setPosition(dWTransfer);
                 }
                 if (gamepad1.right_bumper) {
-                    deliveryWrist.setPosition(0.4);
+                    deliveryWrist.setPosition(dWDeliverSpecimen);
                 }
                 /*if (gamepad2.dpad_up) {
                     targetPos += 0.001;
@@ -133,8 +153,7 @@ public class intoTheDeepTeleAS2 extends LinearOpMode {
                     intakeArm.setPosition(0);
                     freeWristRotate = false;
                     deliveryWrist.setPosition(1);
-                    deliveryClawR.setPosition(0.4);
-                    deliveryClawL.setPosition(0.45);
+                    deliveryClaw.setPosition(dCOpen);
                     intakeWrist.setPosition(0.84);
                     Timer alignmentTimer = new Timer();
                     class alignment extends TimerTask {
@@ -142,14 +161,14 @@ public class intoTheDeepTeleAS2 extends LinearOpMode {
 
                         public void run() {
                             if (taskNumber == 1) {
-                                intakeWrist.setPosition(0);
+                                intakeWrist.setPosition(iAUp);
                             } else if (taskNumber == 2) {
-                                intakeClaw.setPosition(0.57);
+                                intakeClaw.setPosition(iCAlign);
                             } else if (taskNumber == 5) {
-                                intakeClaw.setPosition(0.55);
+                                intakeClaw.setPosition(iCClose);
                                 isOpen = false;
                             } else if (taskNumber == 6) {
-                                intakeWrist.setPosition(0.84);
+                                intakeWrist.setPosition(iWTransferPos);
                             }
                             taskNumber += 1;
                             if (taskNumber > 6) {
@@ -174,8 +193,12 @@ public class intoTheDeepTeleAS2 extends LinearOpMode {
                     if (downCounter <= 15 & downCounter >= 14) {
                         intakeArm.setPosition(0.64);
                     }*/
-                    intakeArm.setPosition(0.64);
+                    intakeArm.setPosition(iADown);
+                    intakeClaw.setPosition(iCOpen);
                     freeWristRotate = true;
+                }
+                if (gamepad1.right_stick_button) {
+                    intakeArm.setPosition(iAReady);
                 }
                 if (vertPos > 3000 && gamepad1.right_stick_y < 0.01) {
                     verticalSlideMotor.setPower(0.3);
@@ -196,10 +219,10 @@ public class intoTheDeepTeleAS2 extends LinearOpMode {
                     } else if (gamepad1.right_trigger > 0.1) {
                         intakeWristTargetPos -= 0.005 * gamepad1.right_trigger;
                     }
-                    if (intakeWristTargetPos > 0.9) {
-                        intakeWristTargetPos = 0.9;
-                    } else if (intakeWristTargetPos < 0.3) {
-                        intakeWristTargetPos = 0.3;
+                    if (intakeWristTargetPos > 1) {
+                        intakeWristTargetPos = 1;
+                    } else if (intakeWristTargetPos < 0) {
+                        intakeWristTargetPos = 0;
                     }
                     intakeWrist.setPosition(intakeWristTargetPos);
                 }
@@ -284,14 +307,11 @@ public class intoTheDeepTeleAS2 extends LinearOpMode {
     }
 
     private void initServoModes() {
-        intakeClaw.setPosition(0.55);
+        intakeClaw.setPosition(iCClose);
         intakeWristTargetPos = 0.84;
         intakeWrist.setPosition(intakeWristTargetPos);
-        intakeArm.setPosition(0);
-        deliveryWrist.setPosition(0.8);
-        deliveryClawR.setPosition(0.5);
-        deliveryClawL.setPosition(0.3);
-
-        intakeWristTargetPos = 0.84;
+        intakeArm.setPosition(iAUp);
+        deliveryWrist.setPosition(dWStartPos);
+        deliveryClaw.setPosition(dCClose);
     }
 }
