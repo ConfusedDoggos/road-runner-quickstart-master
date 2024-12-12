@@ -33,6 +33,7 @@ public class intoTheDeepTeleAS2 extends LinearOpMode {
     public static double dWStartPos = 0.8;
     public static int TransferDelay1 = 250;
     public static int TransferDelay2 = 500;
+    public boolean dpadDownLastValue = false;
     private DcMotor rightBack;
     private DcMotor leftBack;
     private DcMotor leftFront;
@@ -90,6 +91,7 @@ public class intoTheDeepTeleAS2 extends LinearOpMode {
                 moveVariables();
                 speedSettings();
                 mecanumMath();
+                
                 if (gamepad1.a) {
                     intakeClaw.setPosition(iCOpen);
                     /*if (!freeWristRotate) {
@@ -181,7 +183,7 @@ public class intoTheDeepTeleAS2 extends LinearOpMode {
                         alignmentTimer.schedule(alignmentTask, 200, 500);
                     }
                     intakeWristTargetPos = 0.84;
-                } else if (gamepad1.dpad_down/* & horizPos >= 20*/) {
+                } else if (gamepad1.dpad_down && !dpadDownLastValue) {
                     /*downCounter += 0.3;
                     if (downCounter > 15) {
                         downCounter = 15;
@@ -193,9 +195,16 @@ public class intoTheDeepTeleAS2 extends LinearOpMode {
                     if (downCounter <= 15 & downCounter >= 14) {
                         intakeArm.setPosition(0.64);
                     }*/
-                    intakeArm.setPosition(iADown);
-                    intakeClaw.setPosition(iCOpen);
+                    downCounter += 1;
                     freeWristRotate = true;
+                    if (downCounter = 1) {
+                        intakeArm.setPosition(iAReady);
+                        intakeClaw.setPosition(iCOpen);
+                    } else if (downCounter = 1) {
+                        intakeArm.setPosition(iADown);
+                    } else if (downCounter > 2) {
+                        downCounter = 2;
+                    }
                 }
                 if (gamepad1.right_stick_button) {
                     intakeArm.setPosition(iAReady);
