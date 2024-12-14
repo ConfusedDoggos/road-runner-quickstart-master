@@ -1,10 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
-import androidx.annotation.NonNull;
-
 import com.acmerobotics.dashboard.config.Config;
-import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
-import com.acmerobotics.roadrunner.Action;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -12,7 +8,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import java.util.Timer;
-import java.util.TimerTask;
+
 @Config
 @TeleOp(name = "intoTheDeepTeleAS2", group = "TeleOp")
 public class intoTheDeepTeleAS2 extends LinearOpMode {
@@ -33,6 +29,11 @@ public class intoTheDeepTeleAS2 extends LinearOpMode {
     public static double dWStartPos = 0.8;
     public static int TransferDelay1 = 250;
     public static int TransferDelay2 = 500;
+    public boolean dpadDownToggle = false;
+    public boolean xToggle = false;
+    public boolean yToggle = false;
+    public boolean isDeliveryOpen = false;
+    boolean isIntakeOpen;
     private DcMotor rightBack;
     private DcMotor leftBack;
     private DcMotor leftFront;
@@ -54,7 +55,6 @@ public class intoTheDeepTeleAS2 extends LinearOpMode {
     double targetPos;
     double intakeWristTargetPos;
     boolean freeWristRotate;
-    boolean isOpen;
     double downCounter;
 
 
@@ -90,112 +90,141 @@ public class intoTheDeepTeleAS2 extends LinearOpMode {
                 moveVariables();
                 speedSettings();
                 mecanumMath();
-                if (gamepad1.a) {
+
+                /*if (gamepad1.a) {
                     intakeClaw.setPosition(iCOpen);
-                    /*if (!freeWristRotate) {
+                    if (!freeWristRotate) {
                         deliveryClawR.setPosition(0.5);
                         deliveryClawL.setPosition(0.3);
-                    }*/
-                    isOpen = true;
+                    }
+                    isIntakeOpen = true;
                     //intake claw open
                 } else if (gamepad1.b) {
                     //intake claw close
                     intakeClaw.setPosition(iCClose);
-                    isOpen = false;
-                }
+                    isIntakeOpen = false;
+                }*/
                 if (gamepad1.left_stick_button) {
-                            deliveryWrist.setPosition(dWTransfer);
-                            deliveryClaw.setPosition(dCOpen);
-                            deliveryClaw.setPosition(dCOpen);
-                            intakeWrist.setPosition(iWTransferPos);
-                            intakeArm.setPosition(iAUp);
-                            new Timer().schedule(
-                                    new java.util.TimerTask() {
-                                        @Override
-                                        public void run() {
-                                            deliveryClaw.setPosition(dCClose);
-                                            new Timer().schedule(
-                                                    new java.util.TimerTask() {
-                                                        @Override
-                                                        public void run() {
-                                                            intakeClaw.setPosition(iCOpen);
-                                                        }
-                                                    },TransferDelay1
-                                            );
-                                        }
-                                    },TransferDelay2
-                            );
-                        }
-                if (gamepad1.x) {
-                    deliveryClaw.setPosition(dCClose);
-                } else if (gamepad1.y) {
+                    deliveryWrist.setPosition(dWTransfer);
                     deliveryClaw.setPosition(dCOpen);
+                    deliveryClaw.setPosition(dCOpen);
+                    intakeWrist.setPosition(iWTransferPos);
+                    intakeArm.setPosition(iAUp);
+                    new Timer().schedule(
+                            new java.util.TimerTask() {
+                                @Override
+                                public void run() {
+                                    deliveryClaw.setPosition(dCClose);
+                                    new Timer().schedule(
+                                            new java.util.TimerTask() {
+                                                @Override
+                                                public void run() {
+                                                    intakeClaw.setPosition(iCOpen);
+                                                }
+                                            }, TransferDelay1
+                                    );
+                                }
+                            }, TransferDelay2
+                    );
+                }
+                if (gamepad1.x && !xToggle) {
+                    xToggle = true;
+                    if (isDeliveryOpen) {
+                        deliveryClaw.setPosition(dCClose);
+                        isDeliveryOpen = false;
+                    } else if (!isDeliveryOpen) {
+                        deliveryClaw.setPosition(dCOpen);
+                        isDeliveryOpen = true;
+                    }
+                }
+                if (gamepad1.y && !yToggle) {
+                    yToggle = true;
+                    if (isIntakeOpen) {
+                        intakeClaw.setPosition(iCClose);
+                        isDeliveryOpen = false;
+                    } else if (!isIntakeOpen) {
+                        intakeClaw.setPosition(iCOpen);
+                        isDeliveryOpen = true;
+                    }
                 }
                 if (gamepad1.dpad_left) {
                     deliveryWrist.setPosition(dWDeliverBucket);
                 } else if (gamepad1.dpad_right) {
                     deliveryWrist.setPosition(dWTransfer);
                 }
+
                 if (gamepad1.right_bumper) {
                     deliveryWrist.setPosition(dWDeliverSpecimen);
                 }
-                /*if (gamepad2.dpad_up) {
-                    targetPos += 0.001;
-                } else if (gamepad2.dpad_down) {
-                    targetPos -= 0.001;
-                }
-                if (gamepad2.left_trigger > 0.5) {
-                    intakeClaw.setPosition(targetPos);
-                }*/
 
-                if (gamepad1.dpad_up/* & horizontalSlideMotor.getCurrentPosition() < 300*/) {
+
+                if (gamepad1.dpad_up) {
                     downCounter = 0;
-                    intakeArm.setPosition(0);
+                    intakeArm.setPosition(iAUp);
                     freeWristRotate = false;
-                    deliveryWrist.setPosition(1);
+                    deliveryWrist.setPosition(dWTransfer);
                     deliveryClaw.setPosition(dCOpen);
-                    intakeWrist.setPosition(0.84);
-                    Timer alignmentTimer = new Timer();
-                    class alignment extends TimerTask {
-                        int taskNumber = 0;
-
-                        public void run() {
-                            if (taskNumber == 1) {
-                                intakeWrist.setPosition(iAUp);
-                            } else if (taskNumber == 2) {
-                                intakeClaw.setPosition(iCAlign);
-                            } else if (taskNumber == 5) {
-                                intakeClaw.setPosition(iCClose);
-                                isOpen = false;
-                            } else if (taskNumber == 6) {
-                                intakeWrist.setPosition(iWTransferPos);
-                            }
-                            taskNumber += 1;
-                            if (taskNumber > 6) {
-                                alignmentTimer.cancel();
-                            }
-                        }
-                    }
-                    if (!isOpen) {
-                        TimerTask alignmentTask = new alignment();
-                        alignmentTimer.schedule(alignmentTask, 200, 500);
-                    }
+                    intakeWrist.setPosition(iWTransferPos);
                     intakeWristTargetPos = 0.84;
-                } else if (gamepad1.dpad_down/* & horizPos >= 20*/) {
-                    /*downCounter += 0.3;
-                    if (downCounter > 15) {
-                        downCounter = 15;
-                    } else if (downCounter <= 5 & downCounter >= 4) {
-                        intakeArm.setPosition(0.5);
-                        intakeClaw.setPosition(0.8);
-                        isOpen = true;
-                    }
-                    if (downCounter <= 15 & downCounter >= 14) {
-                        intakeArm.setPosition(0.64);
+                    /*if (!isIntakeOpen) {
+                        iW.setPosition(iWAlignmentPos);
+                        iC.setPosition(iCClose);
+                        new Timer().schedule(
+                                new java.util.TimerTask() {
+                                    @Override
+                                    public void run() {
+                                        iC.setPosition(iCAlign);
+                                        new Timer().schedule(
+                                                new java.util.TimerTask() {
+                                                    @Override
+                                                    public void run() {
+                                                        iC.setPosition(iCClose);
+                                                        new Timer().schedule(
+                                                                new java.util.TimerTask() {
+                                                                    @Override
+                                                                    public void run() {
+                                                                        iC.setPosition(iCAlign);
+                                                                        new Timer().schedule(
+                                                                                new java.util.TimerTask() {
+                                                                                    @Override
+                                                                                    public void run() {
+                                                                                        iC.setPosition(iCClose);
+                                                                                        new Timer().schedule(
+                                                                                                new java.util.TimerTask() {
+                                                                                                    @Override
+                                                                                                    public void run() {
+                                                                                                        iW.setPosition(iWTransferPos);
+                                                                                                    }
+                                                                                                },100
+                                                                                        );
+                                                                                    }
+                                                                                },300
+                                                                        );
+                                                                    }
+                                                                },100
+                                                        );
+                                                    }
+                                                },300
+                                        );
+                                    }
+                                },500
+                        );
                     }*/
-                    intakeArm.setPosition(iADown);
-                    intakeClaw.setPosition(iCOpen);
+
+                } else if (gamepad1.dpad_down && !dpadDownToggle) {
+                    downCounter += 1;
+                    dpadDownToggle = false;
                     freeWristRotate = true;
+                    if (downCounter == 1) {
+                        intakeArm.setPosition(iAReady);
+                        intakeClaw.setPosition(iCOpen);
+                    } else if (downCounter == 2) {
+                        intakeArm.setPosition(iADown);
+                    } else if (downCounter > 2) {
+                        downCounter = 1;
+                        intakeArm.setPosition(iAReady);
+                        intakeClaw.setPosition(iCOpen);
+                    }
                 }
                 if (gamepad1.right_stick_button) {
                     intakeArm.setPosition(iAReady);
@@ -232,13 +261,22 @@ public class intoTheDeepTeleAS2 extends LinearOpMode {
                 if (gamepad1.left_bumper) {
                     horizontalSlideMotor.setPower(horizontalSlideMotor.getPower() * (10 / 3));
                 }
+                if (!gamepad1.x) {
+                    xToggle = false;
+                }
+                if (!gamepad1.y) {
+                    yToggle = false;
+                }
+                if (!gamepad1.dpad_down) {
+                    dpadDownToggle = false;
+                }
                 vertPos = verticalSlideMotor.getCurrentPosition();
                 telemetry.addData("vertSlidePos", vertPos);
                 telemetry.addData("CurrentServoPos", targetPos);
                 telemetry.addData("intakeWristRotation", intakeWristTargetPos);
                 telemetry.addData("horizontalSlidePos", horizPos);
                 telemetry.addData("horizontalSlidePower", horizontalSlideMotor.getPower());
-                telemetry.addData("LeftStickY",gamepad1.left_stick_y);
+                telemetry.addData("LeftStickY", gamepad1.left_stick_y);
                 telemetry.addData("downCounter", downCounter);
                 telemetry.update();
             }

@@ -38,19 +38,20 @@ public class AutoTest2 extends LinearOpMode {
     public static double iAReady = 0.5;
     public static double dCOpen = 0.5;
     public static double dCClose = 0.35;
-    public static double dWTransfer = 1;
+    public static double dWTransfer = 0.95;
     public static double dWDeliverBucket = 0.2;
     public static double dWDeliverSpecimen = 0;
     public static double dWStartPos = 0.8;
     public static int verticalSlidePos;
     public static int horizontalSlidePos;
-    public static double BucketDeliverWait = 2.0;
+    public static double BucketDeliverWait = 1.8;
     public static double PickupWait = 1.7;
 
-    public static double TransferWait = 0.5;
-    public static double RRInitPosX = 30;
+    public static double TransferWait = 1;
+    public static double RRInitPosX = 42;
     public static double RRInitPosY = 60;
     public static double RRInitPosHeading = Math.PI;
+    public static double MoveBackTrajUnits = 3;
     public static double Traj1SetTangent = 0;
     public static double  Traj1X = 55;
     public static double  Traj1Y = 55;
@@ -61,22 +62,36 @@ public class AutoTest2 extends LinearOpMode {
     public static double Traj2InitHeading = -3 * Math.PI / 4;
     public static double  Traj2TurnToHeading = -Math.PI / 2;
     public static double  Traj2LineToY = 40;
-    public static double  Traj2X = 50;
+    public static double  Traj2X = 39.25;
     public static double  Traj2Y = 40;
-    public static double Traj3InitX = 50;
+    public static double Traj3InitX = 39.25;
     public static double Traj3InitY = 40;
     public static double Traj3InitHeading = -Math.PI / 2;
     public static double Traj3SetTangent = Math.PI / 2;
-    public static double Traj3X = 55;
-    public static double Traj3Y = 55;
+    public static double Traj3X = 53;
+    public static double Traj3Y = 57;
     public static double Traj3Heading = Math.PI / 4;
-    public static double HorizontalExtensionTicks = 65;
+    public static double Traj4LineToY = 43;
+    public static double Traj4Y = 43;
+    public static double Traj4X = 53.25;
+    public static double Traj4TurnToHeading = -Math.PI / 2;
+    public static double Traj4InitX = 53;
+    public static double Traj4InitY = 57;
+    public static double Traj4InitHeading = Traj3Heading;
+    public static double Traj5InitX = Traj4X - (Math.sqrt(2) * MoveBackTrajUnits);
+    public static double Traj5InitY = Traj4Y;
+    public static double Traj5InitHeading = Traj4TurnToHeading;
+    public static double Traj5SetTangent  = Math.PI / 2;
+    public static double Traj5X = 50;
+    public static double Traj5Y = 55;
+    public static double Traj5Heading = Math.PI / 4;
+    public static double HorizontalExtensionTicks = 210;
     public static double HorizontalRetractionTicks = 5;
     public static int TransferDelay1 = 250;
     public static int TransferDelay2 = 500;
     public static int PickUpDelay1 = 300;
     public static int PickUpDelay2 = 800;
-    public static boolean PickupWithContact = true;
+    public static boolean PickupWithContact = false;
     public static int ForwardTimeForPickup = 400;
 
     // public static int target;
@@ -110,7 +125,7 @@ public class AutoTest2 extends LinearOpMode {
             @Override
             public boolean run(@NonNull TelemetryPacket telemetryPacket) {
                 if (!initialized) {
-                    verticalSlideMotor.setPower(-0.7);
+                    verticalSlideMotor.setPower(-1);
                     initialized = true;
                 }
 
@@ -136,11 +151,11 @@ public class AutoTest2 extends LinearOpMode {
         }
         public class SlideDown implements Action {
             private boolean initialized = false;
-
+            double vertpos = 0;
             @Override
             public boolean run(@NonNull TelemetryPacket telemetryPacket) {
                 if (!initialized) {
-                    verticalSlideMotor.setPower(0.6);
+                    verticalSlideMotor.setPower(0.8);
                     initialized = true;
                 }
 
@@ -187,13 +202,13 @@ public class AutoTest2 extends LinearOpMode {
             @Override
             public boolean run(@NonNull TelemetryPacket telemetryPacket) {
                 if (!initialized) {
-                    horizontalSlideMotor.setPower(0.3);
                     initialized = true;
+                    horizontalSlideMotor.setPower(0.3);
                 }
 
                 // checks lift's current position
                 double horizpos = horizontalSlideMotor.getCurrentPosition();
-                telemetry.addData("liftPos", horizpos);
+                telemetry.addData("horizliftPos", horizpos);
                 telemetry.update();
                 if (horizpos < HorizontalExtensionTicks) {
                     // true causes the action to rerun
@@ -211,6 +226,36 @@ public class AutoTest2 extends LinearOpMode {
         public Action slideForward() {
             return new SlideForward();
         }
+        public class SlideForward2 implements Action {
+            private boolean initialized = false;
+
+            @Override
+            public boolean run(@NonNull TelemetryPacket telemetryPacket) {
+                if (!initialized) {
+                    initialized = true;
+                    horizontalSlideMotor.setPower(0.3);
+                }
+
+                // checks lift's current position
+                double horizontalpos = horizontalSlideMotor.getCurrentPosition();
+                telemetry.addData("horizontalliftPos", horizontalpos);
+                telemetry.update();
+                if (horizontalpos < HorizontalExtensionTicks) {
+                    // true causes the action to rerun
+                    return true;
+                } else {
+                    // false stops action rerun
+                    horizontalSlideMotor.setPower(0);
+                    return false;
+                }
+                // overall, the action powers the lift until it surpasses
+                // 3000 encoder ticks, then powers it off
+            }
+
+        }
+        public Action slideForward2() {
+            return new SlideForward2();
+        }
         public class SlideBack implements Action {
             private boolean initialized = false;
 
@@ -223,7 +268,7 @@ public class AutoTest2 extends LinearOpMode {
 
                 // checks lift's current position
                 double horizpos = horizontalSlideMotor.getCurrentPosition();
-                telemetry.addData("liftPos", horizpos);
+                telemetry.addData("horizliftPos", horizpos);
                 telemetry.update();
                 if (horizpos > HorizontalRetractionTicks) {
                     // true causes the action to rerun
@@ -312,7 +357,7 @@ public class AutoTest2 extends LinearOpMode {
 
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
-                dW.setPosition(dWDeliverBucket);
+                dW.setPosition(dWDeliverSpecimen);
                 new Timer().schedule(
                         new java.util.TimerTask() {
                             @Override
@@ -343,7 +388,7 @@ public class AutoTest2 extends LinearOpMode {
                                         },500
                                 );
                             }
-                        },500
+                        },300
                 );
                 return false;
             }
@@ -575,7 +620,7 @@ public class AutoTest2 extends LinearOpMode {
                 .turnTo(Traj1TurnToHeading);
         //Will wait for slide to go up & score
 
-        TrajectoryActionBuilder Trajectory2 = drive.actionBuilder(new Pose2d(Traj2InitX,Traj2InitY,Traj2InitHeading))
+        TrajectoryActionBuilder Trajectory2 = drive.actionBuilder(new Pose2d(Traj2InitX-(MoveBackTrajUnits * Math.sqrt(2)),Traj2InitY-(MoveBackTrajUnits * Math.sqrt(2)),Traj2InitHeading))
                 .turnTo(Traj2TurnToHeading)
                 .lineToY(Traj2LineToY)
                 .strafeToConstantHeading(new Vector2d(Traj2X, Traj2Y));
@@ -583,21 +628,59 @@ public class AutoTest2 extends LinearOpMode {
 
         TrajectoryActionBuilder Trajectory3 = drive.actionBuilder(new Pose2d(Traj3InitX,Traj3InitY,Traj3InitHeading))
                 .setTangent(Traj3SetTangent)
-                .splineTo(new Vector2d(Traj3X, Traj3Y), Traj3Heading);
+                .splineToConstantHeading(new Vector2d(Traj3X, Traj3Y), Traj3Heading)
+                .turnTo(Traj1TurnToHeading);
+
+        TrajectoryActionBuilder Trajectory4 = drive.actionBuilder(new Pose2d(Traj4InitX-(MoveBackTrajUnits * Math.sqrt(2)),Traj4InitY-(MoveBackTrajUnits * Math.sqrt(2)),Traj1TurnToHeading))
+                .turnTo(Traj4TurnToHeading)
+                .lineToY(Traj4LineToY)
+                .strafeToConstantHeading(new Vector2d(Traj4X, Traj4Y));
+
+        TrajectoryActionBuilder Trajectory5 = drive.actionBuilder(new Pose2d(Traj4X,Traj4Y,Traj5InitHeading))
+                .setTangent(Traj5SetTangent)
+                .splineToConstantHeading(new Vector2d(Traj5X, Traj5Y), Traj5Heading)
+                .turnTo(Traj1TurnToHeading);
+
+        TrajectoryActionBuilder MoveBackTraj = drive.actionBuilder(new Pose2d (0,0,0))
+                .lineToX(MoveBackTrajUnits);
+        TrajectoryActionBuilder MoveBackTraj2 = drive.actionBuilder(new Pose2d (0,0,0))
+                .lineToX(MoveBackTrajUnits);
+
         TrajectoryActionBuilder WaitForBucket = drive.actionBuilder(initialPose)
+                .waitSeconds(BucketDeliverWait);
+        TrajectoryActionBuilder WaitForBucket2 = drive.actionBuilder(initialPose)
+                .waitSeconds(BucketDeliverWait);
+        TrajectoryActionBuilder WaitForBucket3 = drive.actionBuilder(initialPose)
                 .waitSeconds(BucketDeliverWait);
         TrajectoryActionBuilder WaitForPickup = drive.actionBuilder(initialPose)
                 .waitSeconds(PickupWait);
+        TrajectoryActionBuilder WaitForPickup2 = drive.actionBuilder(initialPose)
+                .waitSeconds(PickupWait);
         TrajectoryActionBuilder WaitForTransfer = drive.actionBuilder(initialPose)
                 .waitSeconds(TransferWait);
+        TrajectoryActionBuilder WaitForTransfer2 = drive.actionBuilder(initialPose)
+                .waitSeconds(TransferWait);
+        TrajectoryActionBuilder Wait = drive.actionBuilder(initialPose)
+                .waitSeconds(1);
 
 
         Action Traj1 = Trajectory1.build();
         Action Traj2 = Trajectory2.build();
         Action Traj3 = Trajectory3.build();
+        Action Traj4 = Trajectory4.build();
+        Action Traj5 = Trajectory5.build();
+
         Action waitForBucket = WaitForBucket.build();
+        Action waitForBucket2 = WaitForBucket2.build();
+        Action waitForBucket3 = WaitForBucket3.build();
         Action waitForPickup = WaitForPickup.build();
+        Action waitForPickup2 = WaitForPickup2.build();
         Action waitForTransfer = WaitForTransfer.build();
+        Action waitForTransfer2 = WaitForTransfer2.build();
+        Action MoveBack = MoveBackTraj.build();
+        Action MoveBack2 = MoveBackTraj2.build();
+        Action wait = Wait.build();
+
 
         TrajectoryActionBuilder TrajectoryTest = drive.actionBuilder(initialPose)
                 .turnTo(0)
@@ -629,8 +712,12 @@ public class AutoTest2 extends LinearOpMode {
                         verticalSlide.slideUp(),
                         deliverySystem.deliverToBucket(),
                         waitForBucket,
-                        verticalSlide.slideDown(),
-                        Traj2,
+                        MoveBack,
+                        new ParallelAction(
+                                verticalSlide.slideDown(),
+                                Traj2,
+                                deliverySystem.openDeliveryClaw()
+                        ),
                         horizontalSlide.slideForward(),
                         intakeSystem.pickUpSample(),
                         waitForPickup,
@@ -638,24 +725,34 @@ public class AutoTest2 extends LinearOpMode {
                         intakeSystem.transferToDelivery(),
                         waitForTransfer,
                         new ParallelAction(
-                                verticalSlide.slideUp(),
-                                Traj3
-                        ),
-                        verticalSlide.slideUp(),
-                        deliverySystem.deliverToBucket(),
-                        waitForBucket,
-                        verticalSlide.slideDown()
-                ));
-                /*Actions.runBlocking(new SequentialAction(
-                        new ParallelAction(
-                        TrajTest,
+                                Traj3,
                                 verticalSlide.slideUp()
                         ),
                         verticalSlide.slideUp(),
                         deliverySystem.deliverToBucket(),
-                        waitForBucket,
+                        waitForBucket2,
+                        MoveBack2,
+                        new ParallelAction(
+                                verticalSlide.slideDown(),
+                                Traj4,
+                                deliverySystem.openDeliveryClaw()
+                                ),
+                        horizontalSlide.slideForward2(),
+                        intakeSystem.pickUpSample(),
+                        waitForPickup2,
+                        horizontalSlide.slideBack(),
+                        intakeSystem.transferToDelivery(),
+                        waitForTransfer2,
+                        new ParallelAction(
+                                Traj5,
+                                verticalSlide.slideUp()
+                        ),
+                        verticalSlide.slideUp(),
+                        deliverySystem.deliverToBucket(),
+                        waitForBucket3,
+                        MoveBack,
                         verticalSlide.slideDown()
-                        ));*/
+                ));
                 sleep(30000);
             }
         }
