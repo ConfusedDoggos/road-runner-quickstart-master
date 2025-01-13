@@ -45,19 +45,19 @@ public class SpecimenAuto extends LinearOpMode {
     public static double dWTransfer = 0.95;
     public static double dWDeliverBucket = 0.2;
     public static double dWDeliverSpecimen = 0;
-    public static double dWStartPos = 0.8;
+    public static double dWStartPos = 0.5;
     public static int verticalSlidePos;
     public static int horizontalSlidePos;
     public static double BucketDeliverWait = 1.8;
-    public static double BarDeliverWait = 0.9;
+    public static double BarDeliverWait = 1.5;
     public static double PickupWait = 1.7;
 
     public static double TransferWait = 1;
-    public static double RRInitPosX = -5;
+    public static double RRInitPosX = 5;
     public static double RRInitPosY = 62;
     public static double RRInitPosHeading = 90;
-    public static double lineToY1 = 32;
-    public static double lineToY2 = 35;
+    public static double lineToY1 = 35;
+    public static double lineToY2 = 37;
     public static double strafeTo1X = -35;
     public static double strafeTo1Y = 35;
     public static double strafeTo2X = -35;
@@ -88,7 +88,7 @@ public class SpecimenAuto extends LinearOpMode {
     public static int HorizontalRetractionTicks = 2;
     public static double HorizontalMotorSpeed = 400;
     public static double VerticalMotorSpeed = 1200;
-    public static int VerticalExtensionTicks = 2000;
+    public static int VerticalExtensionTicks = 1500;
     public static int VerticalScoringTicks = 1500;
     public static int VerticalRetractionTicks = 5;
     public static int TransferDelay1 = 250;
@@ -148,7 +148,7 @@ public class SpecimenAuto extends LinearOpMode {
                                 @Override
                                 public void run() {
                                     verticalSlideMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);                                }
-                            }, (int) BucketDeliverWait * 500L
+                            }, 800
                     );
                     return false;
                 }
@@ -389,8 +389,15 @@ public class SpecimenAuto extends LinearOpMode {
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
                 dW.setPosition(dWDeliverSpecimen);
-                verticalSlideMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-                verticalSlideMotor.setPower(-0.7);
+                new Timer().schedule(
+                        new java.util.TimerTask() {
+                            @Override
+                            public void run() {
+                                verticalSlideMotor.setPower(-0.7);
+                                verticalSlideMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+                            }
+                        },1100
+                );
                 new Timer().schedule(
                         new java.util.TimerTask() {
                             @Override
@@ -401,20 +408,20 @@ public class SpecimenAuto extends LinearOpMode {
                                             @Override
                                             public void run() {
                                                 dW.setPosition(dWTransfer);
-                                                verticalSlideMotor.setPower(0);
+                                                //verticalSlideMotor.setPower(0);
                                                 new Timer().schedule(
                                                         new java.util.TimerTask() {
                                                             @Override
                                                             public void run() {
                                                                 dC.setPosition(dCClose);
                                                             }
-                                                        },200
+                                                        },150
                                                 );
                                             }
-                                        },100
+                                        },50
                                 );
                             }
-                        },600
+                        },1300
                 );
                 return false;
 
@@ -649,8 +656,9 @@ public class SpecimenAuto extends LinearOpMode {
 
         TrajectoryActionBuilder TrueTrajectory = drive.actionBuilder(initialPose)
                 .stopAndAdd(new ParallelAction(
-                        drive.actionBuilder(drive.pose)
+                        drive.actionBuilder(initialPose)
                             .lineToY(lineToY1)
+                            .lineToY(lineToY1 + 1)
                             .build(),
                         verticalSlide.slideUp()
                 ))
@@ -658,24 +666,30 @@ public class SpecimenAuto extends LinearOpMode {
                 .waitSeconds(BarDeliverWait)
                 .stopAndAdd(new ParallelAction(
                         verticalSlide.slideDown(),
-                        drive.actionBuilder(drive.pose)
+                        drive.actionBuilder(new Pose2d(RRInitPosX,lineToY1+1,Math.toRadians(90)))
                                 .lineToY(lineToY2)
-                                .strafeTo(new Vector2d(strafeTo1X,strafeTo1Y),null,new ProfileAccelConstraint(-70,100))
-                                .strafeTo(new Vector2d(strafeTo2X,strafeTo2Y),null,new ProfileAccelConstraint(-70,100))
-                                .strafeTo(new Vector2d(strafeTo3X,strafeTo3Y),null,new ProfileAccelConstraint(-70,100))
-                                .strafeTo(new Vector2d(strafeTo4X,strafeTo4Y),null,new ProfileAccelConstraint(-70,100))
+                                //.waitSeconds(10)
+                                .strafeTo(new Vector2d(strafeTo1X,strafeTo1Y)/*,null,new ProfileAccelConstraint(-70,100)*/)
+                                //.waitSeconds(1)
+                                .strafeTo(new Vector2d(strafeTo2X,strafeTo2Y)/*,null,new ProfileAccelConstraint(-70,100)*/)
+                                .strafeTo(new Vector2d(strafeTo3X,strafeTo3Y)/*,null,new ProfileAccelConstraint(-70,100)*/)
+                                .strafeTo(new Vector2d(strafeTo4X,strafeTo4Y)/*,null,new ProfileAccelConstraint(-70,100)*/)
                                 .build()
                 ))
                 .setTangent(Math.toRadians(setTangent1))
                 .turnTo(Math.toRadians(turnTo1))
+                .waitSeconds(3)
+                /*
                 .stopAndAdd(deliverySystem.deliveryWristBack())
                 .lineToY(lineToY3)
+                .waitSeconds(3)
                 .stopAndAdd(deliverySystem.closeDeliveryClaw())
                 .setTangent(setTangent2)
                 .stopAndAdd(new SequentialAction(
                         new ParallelAction(
                                 drive.actionBuilder(drive.pose)
                                         .splineToLinearHeading(new Pose2d(splineTo1X,splineTo1Y,Math.toRadians(splineTo1Heading)),Math.toRadians(splineTo1Tangent))
+                                        .waitSeconds(3)
                                         .build(),
                                 verticalSlide.slideUp()
                         )
@@ -686,6 +700,7 @@ public class SpecimenAuto extends LinearOpMode {
                 .stopAndAdd(new ParallelAction(
                         drive.actionBuilder(drive.pose)
                                 .splineToLinearHeading(new Pose2d(splineTo2X,splineTo2Y,Math.toRadians(splineTo2Heading)),Math.toRadians(splineTo2Tangent))
+                                .waitSeconds(3)
                                 .build(),
                         verticalSlide.slideDown(),
                         deliverySystem.deliveryWristBack(),
@@ -693,15 +708,18 @@ public class SpecimenAuto extends LinearOpMode {
                 ))
                 .waitSeconds(0.5)
                 .lineToY(lineToY4)
+                .waitSeconds(3)
                 .stopAndAdd(deliverySystem.closeDeliveryClaw())
                 .stopAndAdd(new ParallelAction(
                         drive.actionBuilder(drive.pose)
                                 .splineToLinearHeading(new Pose2d(splineTo3X,splineTo3Y,Math.toRadians(splineTo3Heading)),Math.toRadians(splineTo3Tangent))
+                                .waitSeconds(3)
                                 .build(),
                         verticalSlide.slideUp()
                 ))
                 .stopAndAdd(verticalSlide.slideUp())
                 .stopAndAdd(deliverySystem.deliverToBar())
+                .stopAndAdd(verticalSlide.slideDown())*/
                 ;
 
         Action trueTrajectory = TrueTrajectory.build();
@@ -723,8 +741,8 @@ public class SpecimenAuto extends LinearOpMode {
         if (opModeIsActive()) {
 
             Actions.runBlocking(
-                    //trueTrajectory
-                    testTraj
+                    trueTrajectory
+                    //testTraj
             );
             while (opModeIsActive()) {
                sleep(30000);
