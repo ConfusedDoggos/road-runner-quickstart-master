@@ -56,22 +56,22 @@ public class SpecimenAuto extends LinearOpMode {
     public static double RRInitPosX = 5;
     public static double RRInitPosY = 62;
     public static double RRInitPosHeading = 90;
-    public static double lineToY1 = 35;
+    public static double lineToY1 = 33;
     public static double lineToY2 = 37;
-    public static double strafeTo1X = -35;
-    public static double strafeTo1Y = 35;
-    public static double strafeTo2X = -35;
-    public static double strafeTo2Y = 12;
-    public static double strafeTo3X = -45;
-    public static double strafeTo3Y = 12;
-    public static double strafeTo4X = -45;
+    public static double strafeTo1X = -45;
+    public static double strafeTo1Y = 37;
+    public static double strafeTo2X = -45;
+    public static double strafeTo2Y = 23;
+    public static double strafeTo3X = -70;
+    public static double strafeTo3Y = 23;
+    public static double strafeTo4X = -70;
     public static double strafeTo4Y = 55;
     public static double setTangent1 = 90;
     public static double turnTo1 = 270;
     public static double lineToY3 = 62;
     public static double setTangent2 = 270;
-    public static double splineTo1X = -2;
-    public static double splineTo1Y = 32;
+    public static double splineTo1X = -40;
+    public static double splineTo1Y = 40;
     public static double splineTo1Heading = 90;
     public static double splineTo1Tangent = 270;
     public static double splineTo2X = -35;
@@ -88,7 +88,7 @@ public class SpecimenAuto extends LinearOpMode {
     public static int HorizontalRetractionTicks = 2;
     public static double HorizontalMotorSpeed = 400;
     public static double VerticalMotorSpeed = 1200;
-    public static int VerticalExtensionTicks = 1500;
+    public static int VerticalExtensionTicks = 1400;
     public static int VerticalScoringTicks = 1500;
     public static int VerticalRetractionTicks = 5;
     public static int TransferDelay1 = 250;
@@ -407,13 +407,13 @@ public class SpecimenAuto extends LinearOpMode {
                                         new java.util.TimerTask() {
                                             @Override
                                             public void run() {
-                                                dW.setPosition(dWTransfer);
+                                                //dW.setPosition(dWTransfer);
                                                 //verticalSlideMotor.setPower(0);
                                                 new Timer().schedule(
                                                         new java.util.TimerTask() {
                                                             @Override
                                                             public void run() {
-                                                                dC.setPosition(dCClose);
+                                                                //dC.setPosition(dCClose);
                                                             }
                                                         },150
                                                 );
@@ -645,7 +645,7 @@ public class SpecimenAuto extends LinearOpMode {
     @Override
 
     public void runOpMode() throws InterruptedException {
-        Pose2d initialPose = new Pose2d(RRInitPosX, RRInitPosY, Math.toRadians(RRInitPosHeading));
+        Pose2d initialPose = new Pose2d(RRInitPosX,lineToY1, Math.toRadians(RRInitPosHeading));
         MecanumDrive drive = new MecanumDrive(hardwareMap, initialPose);
 
         // actionBuilder builds from the drive steps passed to it
@@ -656,28 +656,47 @@ public class SpecimenAuto extends LinearOpMode {
 
         TrajectoryActionBuilder TrueTrajectory = drive.actionBuilder(initialPose)
                 .stopAndAdd(new ParallelAction(
-                        drive.actionBuilder(initialPose)
+                        drive.actionBuilder(new Pose2d(RRInitPosX, RRInitPosY, Math.toRadians(RRInitPosHeading)))
                             .lineToY(lineToY1)
-                            .lineToY(lineToY1 + 1)
+                            //.lineToY(lineToY1 + 1)
                             .build(),
                         verticalSlide.slideUp()
                 ))
+                //.stopAndAdd(verticalSlide.slideUp())
+                //.lineToY(lineToY1)
                 .stopAndAdd(deliverySystem.deliverToBar())
                 .waitSeconds(BarDeliverWait)
-                .stopAndAdd(new ParallelAction(
+                .stopAndAdd(verticalSlide.slideDown())
+                /*.stopAndAdd(new ParallelAction(
                         verticalSlide.slideDown(),
-                        drive.actionBuilder(new Pose2d(RRInitPosX,lineToY1+1,Math.toRadians(90)))
-                                .lineToY(lineToY2)
-                                //.waitSeconds(10)
-                                .strafeTo(new Vector2d(strafeTo1X,strafeTo1Y)/*,null,new ProfileAccelConstraint(-70,100)*/)
-                                //.waitSeconds(1)
-                                .strafeTo(new Vector2d(strafeTo2X,strafeTo2Y)/*,null,new ProfileAccelConstraint(-70,100)*/)
-                                .strafeTo(new Vector2d(strafeTo3X,strafeTo3Y)/*,null,new ProfileAccelConstraint(-70,100)*/)
-                                .strafeTo(new Vector2d(strafeTo4X,strafeTo4Y)/*,null,new ProfileAccelConstraint(-70,100)*/)
+                        drive.actionBuilder(new Pose2d(RRInitPosX,lineToY1,Math.toRadians(90)))
+
                                 .build()
-                ))
-                .setTangent(Math.toRadians(setTangent1))
+                ))*/
+                .lineToY(lineToY2)
+                .strafeToLinearHeading(new Vector2d(strafeTo1X,strafeTo1Y),Math.toRadians(90),null,new ProfileAccelConstraint(-70,100))
                 .turnTo(Math.toRadians(turnTo1))
+                //.setTangent(Math.toRadians(setTangent1))
+                //.turnTo(Math.toRadians(90.01))
+                .strafeToLinearHeading(new Vector2d(strafeTo2X,strafeTo2Y),Math.toRadians(270),null,new ProfileAccelConstraint(-70,100))
+                //.turnTo(Math.toRadians(90.01))
+                .strafeToLinearHeading(new Vector2d(strafeTo3X,strafeTo3Y),Math.toRadians(270),null,new ProfileAccelConstraint(-70,100))
+                //.turnTo(Math.toRadians(90.01))
+                .strafeToLinearHeading(new Vector2d(strafeTo4X,strafeTo4Y),Math.toRadians(270),null,new ProfileAccelConstraint(-70,100))
+                //.turnTo(Math.toRadians(90.01))
+                .lineToY(strafeTo4Y-5)
+                .waitSeconds(1)
+                .lineToY(strafeTo4Y+15)
+                .stopAndAdd(deliverySystem.closeDeliveryClaw())
+                .stopAndAdd(verticalSlide.slideUp())
+                .lineToY(strafeTo4Y+10)
+                .setTangent(setTangent2)
+                .strafeToLinearHeading(new Vector2d(splineTo1X,splineTo1Y),Math.toRadians(splineTo1Heading))
+                .stopAndAdd(verticalSlide.slideUp())
+                .stopAndAdd(deliverySystem.deliverToBar())
+                .waitSeconds(BarDeliverWait)
+                .lineToY(splineTo1Y + 5)
+                .stopAndAdd(verticalSlide.slideDown())
                 .waitSeconds(3)
                 /*
                 .stopAndAdd(deliverySystem.deliveryWristBack())

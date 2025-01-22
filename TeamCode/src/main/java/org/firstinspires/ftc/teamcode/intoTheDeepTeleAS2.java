@@ -265,6 +265,7 @@ public class intoTheDeepTeleAS2 extends LinearOpMode {
         leftFront.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         rightFront.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         horizontalSlideMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        verticalSlideMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         horizontalSlideMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         verticalSlideMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         verticalSlideMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
