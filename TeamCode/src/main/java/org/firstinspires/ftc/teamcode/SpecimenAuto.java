@@ -78,7 +78,9 @@ public class SpecimenAuto extends LinearOpMode {
     public static double splineTo2Y = 58;
     public static double splineTo2Heading = 270;
     public static double splineTo2Tangent = 90;
-    public static double lineToY4 = 62;
+    public static double lineToY4 = 50;
+    public static double lineToY5 = 62;
+    public static double lineToY6 = 70;
     public static double splineTo3X = 2;
     public static double splineTo3Y = 32;
     public static double splineTo3Heading = 90;
@@ -684,12 +686,11 @@ public class SpecimenAuto extends LinearOpMode {
                 //.turnTo(Math.toRadians(90.01))
                 .strafeToLinearHeading(new Vector2d(strafeTo4X,strafeTo4Y),Math.toRadians(270),null,new ProfileAccelConstraint(-70,100))
                 //.turnTo(Math.toRadians(90.01))
-                .lineToY(strafeTo4Y-5)
+                .lineToY(lineToY4)
                 .waitSeconds(1)
-                .lineToY(strafeTo4Y+15)
+                .lineToY(lineToY5,null,new ProfileAccelConstraint(-20,20))
                 .stopAndAdd(deliverySystem.closeDeliveryClaw())
                 .stopAndAdd(verticalSlide.slideUp())
-                .lineToY(strafeTo4Y+10)
                 .setTangent(setTangent2)
                 .strafeToLinearHeading(new Vector2d(splineTo1X,splineTo1Y),Math.toRadians(splineTo1Heading))
                 .stopAndAdd(verticalSlide.slideUp())
