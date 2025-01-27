@@ -80,7 +80,7 @@ public class SpecimenAuto extends LinearOpMode {
     public static double splineTo2Tangent = 90;
     public static double lineToY4 = 50;
     public static double lineToY5 = 62;
-    public static double lineToY6 = 70;
+    public static double lineToY6 = 40;
     public static double splineTo3X = 2;
     public static double splineTo3Y = 32;
     public static double splineTo3Heading = 90;
@@ -145,13 +145,13 @@ public class SpecimenAuto extends LinearOpMode {
                     return true;
                 } else {
                     // false stops action rerun
-                    new Timer().schedule(
+                    /*new Timer().schedule(
                             new java.util.TimerTask() {
                                 @Override
                                 public void run() {
                                     verticalSlideMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);                                }
                             }, 800
-                    );
+                    );*/
                     return false;
                 }
                 // overall, the action powers the lift until it surpasses
@@ -760,10 +760,80 @@ public class SpecimenAuto extends LinearOpMode {
 
         if (opModeIsActive()) {
 
-            Actions.runBlocking(
+            /*Actions.runBlocking(
                     trueTrajectory
                     //testTraj
-            );
+            );*/
+
+            //Deliver first specimen and back up for reset
+            
+            Actions.runBlocking(
+                new SequentialAction (
+                    new ParallelAction (
+                        drive.actionBuilder(new Pose2d(RRInitPosX, RRInitPosY, Math.toRadians(RRInitPosHeading)))
+                            .lineToY(lineToY1)
+                            .build(),
+                        verticalSlide.SlideUp()
+                    ),
+                    deliverySystem.deliverToBar(),
+                    new SleepAction(BarDeliverWait),
+                    verticalSlide.SlideDown()
+                    drive.actionBuilder(drive.pose)
+                            .lineToY(lineToY2)
+                            .build(),
+            ));
+
+            //Push in sample to human player and pick up second
+            
+            Actions.runBlocking(
+                new SequentialAction (
+                    drive.actionBuilder(drive.pose)
+                            .strafeToLinearHeading(new Vector2d(strafeTo1X,strafeTo1Y),Math.toRadians(90),null,new ProfileAccelConstraint(-70,100))
+                            .build(),
+                    drive.actionBuilder(drive.pose)
+                            .turnTo(Math.toRadians(turnTo1))
+                            .build(),
+                    drive.actionBuilder(drive.pose)
+                            .strafeToLinearHeading(new Vector2d(strafeTo2X,strafeTo2Y),Math.toRadians(270),null,new ProfileAccelConstraint(-70,100))
+                            .strafeToLinearHeading(new Vector2d(strafeTo3X,strafeTo3Y),Math.toRadians(270),null,new ProfileAccelConstraint(-70,100))
+                            .strafeToLinearHeading(new Vector2d(strafeTo4X,strafeTo4Y),Math.toRadians(270),null,new ProfileAccelConstraint(-70,100))
+                            .build(),
+                    drive.actionBuilder(drive.pose)
+                            .strafeTo(new Vector2d(drive.pose.position.x,lineToY4))
+                            .build(),
+                    new SleepAction(1),
+                    drive.actionBuilder(drive.pose)
+                            .turnTo(Math.toRadians(270))
+                            .lineToY(lineToY5,null,new ProfileAccelConstraint(-20,20))
+                            .build(),
+                    deliverySystem.closeDeliveryClaw()
+            ));
+            
+            //Score second specimen
+            
+            Actions.runBlocking(
+                new SequentialAction (
+                    new ParallelAction (
+                        verticalSlide.slideUp(),
+                        drive.actionBuilder(drive.pose)
+                                .setTangent(setTangent2)
+                                .splineToLinearHeading(new Pose2d(splineTo1X,splineTo1Y,Math.toRadians(splineTo1Heading)),Math.toRadians(splineTo1Tangent))
+                                .build()
+                    ),
+                    drive.actionBuilder(drive.pose)
+                                .lineToY(lineToY1)
+                                .build(),
+                    deliverySystem.deliverToBar(),
+                    new SleepAction(BarDeliverWait),
+                    new ParallelAction (
+                        drive.actionBuilder(drive.pose)
+                                    .lineToY(lineToY6)
+                                    .build(),
+                        verticalSlide.slideDown()
+                    ),
+            ));
+            
+
             while (opModeIsActive()) {
                sleep(30000);
             }
