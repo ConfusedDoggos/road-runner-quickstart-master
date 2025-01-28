@@ -395,8 +395,8 @@ public class SpecimenAuto extends LinearOpMode {
                         new java.util.TimerTask() {
                             @Override
                             public void run() {
-                                verticalSlideMotor.setPower(-0.7);
                                 verticalSlideMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+                                verticalSlideMotor.setPower(-0.7);
                             }
                         },1100
                 );
@@ -423,7 +423,7 @@ public class SpecimenAuto extends LinearOpMode {
                                         },50
                                 );
                             }
-                        },1300
+                        },1200
                 );
                 return false;
 
@@ -778,7 +778,7 @@ public class SpecimenAuto extends LinearOpMode {
                     deliverySystem.deliverToBar(),
                     new SleepAction(BarDeliverWait),
                     verticalSlide.slideDown(),
-                    drive.actionBuilder(drive.pose)
+                    drive.actionBuilder(new Pose2d(drive.getPoseEstimate()))
                             .lineToY(lineToY2)
                             .build()
             ));
