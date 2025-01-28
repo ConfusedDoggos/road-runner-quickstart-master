@@ -11,6 +11,7 @@ import com.acmerobotics.roadrunner.ParallelAction;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.ProfileAccelConstraint;
 import com.acmerobotics.roadrunner.SequentialAction;
+import com.acmerobotics.roadrunner.SleepAction;
 import com.acmerobotics.roadrunner.Trajectory;
 import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
 import com.acmerobotics.roadrunner.Vector2d;
@@ -58,13 +59,13 @@ public class SpecimenAuto extends LinearOpMode {
     public static double RRInitPosHeading = 90;
     public static double lineToY1 = 33;
     public static double lineToY2 = 37;
-    public static double strafeTo1X = -45;
+    public static double strafeTo1X = -40;
     public static double strafeTo1Y = 37;
-    public static double strafeTo2X = -45;
+    public static double strafeTo2X = -40;
     public static double strafeTo2Y = 23;
-    public static double strafeTo3X = -70;
+    public static double strafeTo3X = -55;
     public static double strafeTo3Y = 23;
-    public static double strafeTo4X = -70;
+    public static double strafeTo4X = -55;
     public static double strafeTo4Y = 55;
     public static double setTangent1 = 90;
     public static double turnTo1 = 270;
@@ -85,7 +86,6 @@ public class SpecimenAuto extends LinearOpMode {
     public static double splineTo3Y = 32;
     public static double splineTo3Heading = 90;
     public static double splineTo3Tangent = 270;
-    public static double lineToY5 = 35;
     public static int HorizontalExtensionTicks = 210;
     public static int HorizontalRetractionTicks = 2;
     public static double HorizontalMotorSpeed = 400;
@@ -647,9 +647,9 @@ public class SpecimenAuto extends LinearOpMode {
     @Override
 
     public void runOpMode() throws InterruptedException {
-        Pose2d initialPose = new Pose2d(RRInitPosX,lineToY1, Math.toRadians(RRInitPosHeading));
+        Pose2d initialPose = new Pose2d(RRInitPosX,RRInitPosY, Math.toRadians(RRInitPosHeading));
         MecanumDrive drive = new MecanumDrive(hardwareMap, initialPose);
-
+        drive.pose = initialPose;
         // actionBuilder builds from the drive steps passed to it
         VerticalSlide verticalSlide = new VerticalSlide(hardwareMap);
         HorizontalSlide horizontalSlide = new HorizontalSlide(hardwareMap);
@@ -770,30 +770,31 @@ public class SpecimenAuto extends LinearOpMode {
             Actions.runBlocking(
                 new SequentialAction (
                     new ParallelAction (
-                        drive.actionBuilder(new Pose2d(RRInitPosX, RRInitPosY, Math.toRadians(RRInitPosHeading)))
+                        drive.actionBuilder(drive.pose)
                             .lineToY(lineToY1)
                             .build(),
-                        verticalSlide.SlideUp()
+                        verticalSlide.slideUp()
                     ),
                     deliverySystem.deliverToBar(),
                     new SleepAction(BarDeliverWait),
-                    verticalSlide.SlideDown()
+                    verticalSlide.slideDown(),
                     drive.actionBuilder(drive.pose)
                             .lineToY(lineToY2)
-                            .build(),
+                            .build()
             ));
 
             //Push in sample to human player and pick up second
-            
+            telemetry.addData("posestimate",drive.pose);
+            telemetry.update();
             Actions.runBlocking(
                 new SequentialAction (
-                    drive.actionBuilder(drive.pose)
+                    drive.actionBuilder(new Pose2d(drive.pose.position.x,drive.pose.position.y,Math.toRadians(drive.pose.heading.toDouble())))
                             .strafeToLinearHeading(new Vector2d(strafeTo1X,strafeTo1Y),Math.toRadians(90),null,new ProfileAccelConstraint(-70,100))
                             .build(),
-                    drive.actionBuilder(drive.pose)
+                    drive.actionBuilder(new Pose2d(drive.pose.position.x,drive.pose.position.y,Math.toRadians(drive.pose.heading.toDouble())))
                             .turnTo(Math.toRadians(turnTo1))
                             .build(),
-                    drive.actionBuilder(drive.pose)
+                    drive.actionBuilder(new Pose2d(drive.pose.position.x,drive.pose.position.y,Math.toRadians(drive.pose.heading.toDouble())))
                             .strafeToLinearHeading(new Vector2d(strafeTo2X,strafeTo2Y),Math.toRadians(270),null,new ProfileAccelConstraint(-70,100))
                             .strafeToLinearHeading(new Vector2d(strafeTo3X,strafeTo3Y),Math.toRadians(270),null,new ProfileAccelConstraint(-70,100))
                             .strafeToLinearHeading(new Vector2d(strafeTo4X,strafeTo4Y),Math.toRadians(270),null,new ProfileAccelConstraint(-70,100))
@@ -810,7 +811,9 @@ public class SpecimenAuto extends LinearOpMode {
             ));
             
             //Score second specimen
-            
+            telemetry.addData("posestimate",drive.pose);
+            telemetry.update();
+
             Actions.runBlocking(
                 new SequentialAction (
                     new ParallelAction (
@@ -830,9 +833,11 @@ public class SpecimenAuto extends LinearOpMode {
                                     .lineToY(lineToY6)
                                     .build(),
                         verticalSlide.slideDown()
-                    ),
+                    )
             ));
-            
+            telemetry.addData("posestimate",drive.pose);
+            telemetry.update();
+
 
             while (opModeIsActive()) {
                sleep(30000);
