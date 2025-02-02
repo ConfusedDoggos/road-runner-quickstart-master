@@ -778,7 +778,7 @@ public class SpecimenAuto extends LinearOpMode {
                     deliverySystem.deliverToBar(),
                     new SleepAction(BarDeliverWait),
                     verticalSlide.slideDown(),
-                    drive.actionBuilder(new Pose2d(drive.getPoseEstimate()))
+                    drive.actionBuilder(drive.pose)
                             .lineToY(lineToY2)
                             .build()
             ));
